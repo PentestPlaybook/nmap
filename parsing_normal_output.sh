@@ -11,18 +11,19 @@ if [ ! -f "$nmap_output" ]; then
 fi
 
 # Initialize the CSV file with headers
-echo "IP,Port" > "$csv_output"
+echo "IP,Port,Service" > "$csv_output"
 
 # Process each host section in the nmap output
 while IFS= read -r line; do
     if [[ $line == Nmap\ scan\ report\ for* ]]; then
         # Extract the IP address
         ip=$(echo "$line" | awk '{print $NF}')
-    elif [[ $line == *open* && $line != *filtered* ]]; then
-        # Extract the port and check it's open, then write to CSV
+    elif [[ $line == *open* && $line != *filtered* && $line != *closed* ]]; then
+        # Extract the port number, service, and service version
         port=$(echo "$line" | awk -F '/' '{print $1}')
-        echo "$ip,$port" >> "$csv_output"
+        service=$(echo "$line" | awk '{print $3}')
+        echo "$ip,$port,$service" >> "$csv_output"
     fi
 done < "$nmap_output"
 
-echo "Extraction complete. Open ports saved to $csv_output"
+echo "Extraction complete. Open ports and services saved to $csv_output"
